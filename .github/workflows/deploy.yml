@@ -1,41 +1,28 @@
-name: Deploy to GitHub Pages
+name: 每日同步热榜数据
 
 on:
-  push:
-    branches:
-      - master
   schedule:
-    - cron: '0 */3 * * *' # 每3小时自动更新一次
+    - cron: '0 */3 * * *' # 每3小时自动更新
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      
+      - name: 设置Python环境
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24 # 升级到最新LTS版本，解决弃用警告
-          cache: 'pnpm' # 改为pnpm缓存
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile # 用pnpm安装依赖
-
-      - name: Build
-        run: pnpm run build # 用pnpm构建
-
-      - name: Deploy
+          python-version: '3.11'
+      
+      - name: 安装依赖
+        run: pip install requests
+      
+      - name: 运行抓取脚本
+        run: python fetch_hot.py
+      
+      - name: 部署到GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
